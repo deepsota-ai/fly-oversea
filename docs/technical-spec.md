@@ -11,7 +11,7 @@
 - 文件：S3 兼容私有对象存储；
 - 邮件：Resend；
 - 日历：平台排班为主，iCalendar 导入/导出；CalDAV 双向同步作为增强能力；
-- 会议：腾讯会议开放平台；同时支持导师手动填写会议链接；
+- 会议：腾讯会议开放平台；同时支持负责咨询的服务人员手动填写会议链接；
 - 任务队列：Phase 1 可使用托管 Cron + 数据库 Outbox，Phase 3 引入队列；
 - 可观测性：结构化日志、错误追踪和产品事件。
 
@@ -21,7 +21,7 @@
 |---|---|---|
 | Identity | 用户、角色、会话、激活 | Case 分配 |
 | CRM | Lead、来源、跟进、转化 | 合同执行 |
-| Scheduling | 导师规则、Busy、预约、提醒 | 顾问服务内容 |
+| Scheduling | 服务人员规则、Busy、预约、提醒 | 咨询与服务交付内容 |
 | Case Management | Case、分配、状态 | 文件二进制 |
 | Commerce | 方案、合同、付款、授权 | 在线支付清算（由供应商） |
 | Delivery | 模板、里程碑、任务、交付物 | 内容营销 |
@@ -50,7 +50,7 @@ ProposalStatus:
 DRAFT | SENT | ACCEPTED | REJECTED | EXPIRED
 
 ContractStatus:
-DRAFT | SENT | PARTIALLY_SIGNED | SIGNED | VOID | TERMINATED
+DRAFT | READY_TO_SIGN | SIGNED | VOID | TERMINATED
 
 PaymentStatus:
 PENDING | UNDER_REVIEW | PAID | FAILED | REFUNDED | PARTIALLY_REFUNDED
@@ -73,12 +73,12 @@ TODO | IN_PROGRESS | BLOCKED | IN_REVIEW | DONE | CANCELLED
 
 - `leads(id, email, phone, wechat, source, utm_json, status, owner_id, ...)`
 - `lead_profiles(lead_id, service_type, education_json, targets_json, concerns, consent_id)`
-- `availability_rules(id, consultant_id, timezone, days_json, start_time, end_time, buffer_min)`
-- `calendar_sources(id, consultant_id, source_type, ical_url_encrypted, caldav_config_encrypted, sync_status, synced_at)`
+- `availability_rules(id, staff_id, timezone, days_json, start_time, end_time, buffer_min)`
+- `calendar_sources(id, staff_id, source_type, ical_url_encrypted, caldav_config_encrypted, sync_status, synced_at)`
 - `calendar_busy_blocks(id, source_id, external_uid, start_at, end_at, etag, refreshed_at)`
 - `oauth_connections(id, user_id, provider, encrypted_tokens, expires_at, status)`
-- `appointments(id, lead_id, case_id, consultant_id, start_at, end_at, status, meeting_provider, meeting_url, meeting_external_id, idempotency_key)`
-- 唯一约束：`(consultant_id, start_at)`；`idempotency_key` 唯一。
+- `appointments(id, lead_id, case_id, staff_id, start_at, end_at, status, meeting_provider, meeting_url, meeting_external_id, idempotency_key)`
+- 唯一约束：`(staff_id, start_at)`；`idempotency_key` 唯一。
 
 ### 商务
 
@@ -91,8 +91,8 @@ TODO | IN_PROGRESS | BLOCKED | IN_REVIEW | DONE | CANCELLED
 - `contract_templates(id, name, version, document_url, active, effective_at)`
 - `contracts(id, case_id, proposal_id, confirmation_id, template_id, status, signed_document_url, signer_name, snapshot_hash, ...)`
 - `contract_signatures(id, contract_id, signer_id, signed_at, evidence_json)`
-- `payment_plans(id, contract_id, due_at, amount, unlocks_service)`
-- `payments(id, payment_plan_id, amount, method, status, payer_name, proof_url, verified_by, verified_at)`
+- `payment_requests(id, contract_id, due_at, amount, unlocks_service)`；MVP 每份合同仅创建一条一次性付款请求
+- `payments(id, payment_request_id, amount, method, status, payer_name, proof_url, verified_by, verified_at)`
 - `entitlements(id, case_id, service_code, starts_at, ends_at, status)`
 
 ### 交付
@@ -113,6 +113,12 @@ TODO | IN_PROGRESS | BLOCKED | IN_REVIEW | DONE | CANCELLED
 - `outbox_events(id, event_type, aggregate_id, payload_json, status, attempts, next_attempt_at)`
 - `consents(id, subject_type, subject_id, policy_version, purpose, accepted_at, evidence_json)`
 - `audit_logs(id, actor_id, action, object_type, object_id, before_json, after_json, created_at)`
+
+合同签署约束：
+
+- MVP 将“通用合同条款 + 本次服务确认单”组合为同一个合同包；
+- 学生上传一份签署后的合同包 PDF，作为两部分共同的签署证据；
+- 合同包必须保存模板版本、服务确认单价格快照和文件校验值，后续商品改价不得影响历史合同。
 
 ## 5. API 约定
 
@@ -141,7 +147,7 @@ POST   /api/proposals/:id/accept
 GET    /api/cases/:id/service-confirmation
 GET    /api/cases/:id/contract
 POST   /api/contracts/:id/sign
-POST   /api/payments/:planId/proof
+POST   /api/payments/:requestId/proof
 GET    /api/cases/:id/tasks
 POST   /api/deliverables/:id/versions
 POST   /api/deliverables/:id/comments
@@ -172,6 +178,15 @@ PATCH  /api/admin/users/:id/roles
 - 资源授权同时检查角色和 Case assignment；
 - webhook 先验签、落库、幂等，再异步处理。
 
+### 预约业务常量
+
+- 首次背景评估对外展示时长：30 分钟；
+- 首次背景评估实际占用时段：45 分钟；
+- 初评通过且学生表达签约兴趣后，合同及其他问题答疑会议：60 分钟；
+- 学生通过邮件签名链接自助取消或改期的截止时间：会议开始前 12 小时；
+- 默认预约提醒：会议开始前 24 小时；
+- 所有时长与截止规则由服务端校验，前端只负责展示，不得仅依赖客户端限制。
+
 ## 6. 领域事件
 
 ```text
@@ -195,15 +210,32 @@ case.completed
 
 ## 7. 权限矩阵
 
-| 资源 | 学生 | 分配导师 | 服务人员 | 管理员 |
-|---|---|---|---|---|
-| 自己的 Case | 读 | 读写 | 按分配读写 | 全部 |
-| 咨询记录 | 读摘要 | 读写 | 按需读 | 全部 |
-| 合同/付款 | 自己读/签/上传 | 读 | 无或只读 | 读写/核验 |
-| 交付物 | 自己读写 | 读写 | 读写 | 全部 |
-| 角色与分配 | 无 | 无 | 无 | 读写 |
-| OAuth Token | 无 | 仅连接/断开自己的 | 无 | 只看状态 |
-| 审计日志 | 无 | 无 | 无 | 只读 |
+`staff_type` 使用 `MENTOR | CONSULTANT`。能力层级为 `MENTOR` 包含 `CONSULTANT` 的基础任务能力。
+
+`assignment_role` 使用 `PRIMARY_MENTOR | SPECIALIST_MENTOR | VISA_OWNER | TASK_CONTRIBUTOR`。
+
+约束：
+
+- `STUDY_ABROAD` Case 必须且只能有一个 `PRIMARY_MENTOR`；
+- `STUDY_ABROAD` Case 可以有多个 `SPECIALIST_MENTOR`；
+- `MENTOR` 可以成为 `PRIMARY_MENTOR`、`SPECIALIST_MENTOR` 或 `TASK_CONTRIBUTOR`；
+- `CONSULTANT` 不能成为 `STUDY_ABROAD.owner_id`；
+- `CONSULTANT` 可以成为签证 Case 的 `VISA_OWNER`；
+- 留学 Case 中的专项导师权限来自 Case assignment，具体写权限仍受职责范围和 Task assignment 限制；
+- 留学 Case 中的顾问权限来自 Task assignment，不因参与一个 Task 自动获得完整 Case 权限；
+- 管理员可同时具有 `MENTOR` 或 `CONSULTANT` staff type。
+
+| 资源 | 学生 | 主导师 | 专项导师 | 顾问 | 管理员 |
+|---|---|---|---|---|---|
+| 自己的留学 Case | 读 | 负责的 Case 读写 | 被分配 Case 只读，职责范围内写 | 仅按 Task 最小范围访问 | 全部 |
+| 自己的签证 Case | 读 | 按分配访问 | 按分配访问 | 作为 VISA_OWNER 时读写 | 全部 |
+| 咨询记录 | 读摘要 | 负责的咨询读写 | 按分配读写 | 负责的咨询读写 | 全部 |
+| AI 初评报告 | 分享后可读 | 负责首次咨询时读写并决定分享 | 被分配且任务需要时可读写 | 负责签证首次咨询时读写并决定分享 | 全部 |
+| 合同/付款 | 自己读/签/上传 | 读 | 只读 | 无或只读 | 读写/核验 |
+| 交付物 | 自己读写 | 负责的 Case 读写 | 被分配的 Task/文件读写 | 被分配的 Task/文件读写 | 全部 |
+| 角色与分配 | 无 | 无 | 无 | 无 | 读写 |
+| OAuth Token | 无 | 仅连接/断开自己的 | 仅连接/断开自己的 | 仅连接/断开自己的 | 只看状态 |
+| 审计日志 | 无 | 无 | 无 | 无 | 只读 |
 
 ## 8. 集成降级
 
@@ -211,7 +243,7 @@ case.completed
 |---|---|---|
 | iCalendar/CalDAV | 导入 Busy 或双向同步事件 | 继续使用平台排班；显示同步时间和失败提示 |
 | 腾讯会议 | 自动建会、取消会议并发送链接 | 预约保留，创建补偿任务，邮件说明链接稍后补充 |
-| 手动会议链接 | 导师粘贴腾讯会议或其他会议 URL | 保存前校验 URL；未补充时持续提醒导师和管理员 |
+| 手动会议链接 | 负责咨询的服务人员粘贴腾讯会议或其他会议 URL | 保存前校验 URL；未补充时持续提醒负责人和管理员 |
 | Resend | 异步发送 | Outbox 重试，后台显示失败并允许重发 |
 | 对象存储 | 上传并校验 | 不创建 DocumentVersion，返回可重试错误 |
 | LLM | 生成草稿 | 不影响业务状态，允许人工完成 |

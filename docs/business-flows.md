@@ -10,19 +10,19 @@ flowchart LR
     cta --> profile["提交精简背景与隐私同意"]
     profile --> duplicate{"是否存在有效预约"}
     duplicate -->|"是"| manage["查看或改期现有预约"]
-    duplicate -->|"否"| match["按服务类型匹配导师"]
-    match --> calendar["读取导师可用时间"]
+    duplicate -->|"否"| match["按服务类型匹配导师或签证顾问"]
+    match --> calendar["读取服务人员可用时间"]
     calendar --> slot["学生选择时段"]
     slot --> reserve{"数据库占位是否成功"}
     reserve -->|"冲突"| calendar
     reserve -->|"成功"| account["创建待激活账号并发送激活邮件"]
     account --> meetingChoice{"会议链接方式"}
     meetingChoice -->|"自动"| meeting["创建腾讯会议"]
-    meetingChoice -->|"手动"| manualMeeting["导师补充会议链接"]
+    meetingChoice -->|"手动"| manualMeeting["负责咨询的服务人员补充会议链接"]
     manualMeeting --> email["发送双方确认和提醒"]
     meeting --> email["发送双方确认和提醒"]
     email --> consult["进行 30 分钟初评（占用 45 分钟）"]
-    consult --> qualify{"顾问资格评估"}
+    consult --> qualify{"主导师或签证顾问资格评估"}
     qualify -->|"适合签约"| interest["学生表达签约兴趣"]
     interest --> contractPreview["解锁合同预览与 60 分钟答疑"]
     contractPreview --> proposal["进入服务方案流程"]
@@ -30,21 +30,23 @@ flowchart LR
     qualify -->|"不适合"| close["关闭线索并记录原因"]
 ```
 
+预约规则：首次评估对外展示 30 分钟并占用 45 分钟时段；默认在会议开始前 24 小时提醒；学生可在会议开始前 12 小时通过邮件签名链接自助取消或改期。
+
 ## 2. 签约与付款流程
 
 ```mermaid
 flowchart LR
     qualified["Qualified 线索"] --> activate["学生激活账号"]
     activate --> caseCreate["创建 Case / 申请季"]
-    caseCreate --> assessment["顾问完善评估与服务范围"]
+    caseCreate --> assessment["主导师或签证顾问完善评估与服务范围"]
     assessment --> proposal["生成并发送服务方案"]
     proposal --> confirmation["生成服务确认单与价格快照"]
     confirmation --> accepted{"学生接受方案"}
     accepted -->|"否"| revise{"是否需要修改"}
     revise -->|"是"| assessment
     revise -->|"否"| close["培育或关闭"]
-    accepted -->|"是"| contract["组合通用合同 PDF 与服务确认单"]
-    contract --> signed{"上传签字合同 PDF"}
+    accepted -->|"是"| contract["组合通用合同条款与本次服务确认单"]
+    contract --> signed{"上传签署后的合同包 PDF"}
     signed -->|"否"| contract
     signed -->|"是"| payment["生成一次性付款记录"]
     payment --> proof["上传付款凭证"]
@@ -64,7 +66,7 @@ flowchart LR
     profile --> strategy["定位与选校策略"]
     strategy --> plan["确认申请清单与截止日期"]
     plan --> docs["CV/PS/Essay 等文档协作"]
-    docs --> review{"学生与导师审批"}
+    docs --> review{"学生与主导师审批"}
     review -->|"修改"| docs
     review -->|"通过"| submitReady["申请材料就绪"]
     submitReady --> submit["递交申请"]
@@ -102,9 +104,9 @@ flowchart LR
 |---|---|---|
 | CONSULTED | 导师 | 咨询摘要、适配度、下一步 |
 | QUALIFIED | 导师/管理员 | 推荐服务、预算/时间匹配 |
-| PROPOSAL_SENT | 导师/销售 | 方案版本、价格、有效期 |
+| PROPOSAL_SENT | 主导师/管理员 | 方案版本、价格、有效期 |
 | CONTRACT_SIGNED | 学生与公司 | 合同快照、签署证据 |
 | PAYMENT_VERIFIED | 财务/管理员 | 金额、时间、凭证、核验人 |
 | ACTIVE | 系统 | 有效合同、满足付款条件、服务授权 |
-| SUBMITTED | 导师/服务人员 | 递交时间、凭证、申请项 |
+| SUBMITTED | 主导师/签证顾问 | 递交时间、凭证、申请项 |
 | COMPLETED | 管理员/负责人 | 交付检查、结果归档、满意度 |
