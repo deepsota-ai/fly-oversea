@@ -21,7 +21,7 @@ flowchart LR
     meetingChoice -->|"手动"| manualMeeting["负责咨询的服务人员补充会议链接"]
     manualMeeting --> email["发送双方确认和提醒"]
     meeting --> email["发送双方确认和提醒"]
-    email --> consult["进行 30 分钟初评（占用 45 分钟）"]
+    email --> consult["进行 20 分钟免费初评（占用 45 分钟）"]
     consult --> qualify{"主导师或签证顾问资格评估"}
     qualify -->|"适合签约"| interest["学生表达签约兴趣"]
     interest --> contractPreview["解锁合同预览与 60 分钟答疑"]
@@ -30,7 +30,7 @@ flowchart LR
     qualify -->|"不适合"| close["关闭线索并记录原因"]
 ```
 
-预约规则：首次评估对外展示 30 分钟并占用 45 分钟时段；默认在会议开始前 24 小时提醒；学生可在会议开始前 12 小时通过邮件签名链接自助取消或改期。
+预约规则：免费首次评估对外展示 20 分钟并占用 45 分钟时段；默认在会议开始前 24 小时提醒；学生可在会议开始前 12 小时通过邮件签名链接自助取消或改期。学生也可通过官网微信客服入口发起人工咨询，客服补录 Lead 和来源渠道。
 
 ## 2. 签约与付款流程
 
@@ -98,11 +98,45 @@ flowchart LR
     result -->|"拒签"| reviewCase["解释结果并评估重申/申诉边界"]
 ```
 
-## 5. 关键状态责任
+## 5. 求职与语言指导交付流程
+
+```mermaid
+flowchart LR
+    active["服务授权生效"] --> type{"服务类型"}
+    type -->|"求职指导"| careerAssess["职业目标与能力诊断"]
+    careerAssess --> careerPlan["生成岗位、简历、面试与行动计划"]
+    careerPlan --> careerTasks["执行任务与导师反馈"]
+    careerTasks --> careerReview{"阶段复盘"}
+    careerReview -->|"继续迭代"| careerTasks
+    careerReview -->|"目标完成"| complete["结果记录与归档"]
+    type -->|"语言指导"| languageAssess["目标与当前水平诊断"]
+    languageAssess --> languagePlan["生成学习与阶段测评计划"]
+    languagePlan --> languageTasks["练习任务、批改与反馈"]
+    languageTasks --> languageReview{"阶段测评"}
+    languageReview -->|"未达目标"| languagePlan
+    languageReview -->|"达到目标"| complete
+```
+
+## 6. 申请进度跟进与外部集成流程
+
+```mermaid
+flowchart LR
+    source["院校/签证外部来源"] --> adapter["进度适配器抓取或导入"]
+    adapter --> raw["保存原始状态、来源与同步时间"]
+    raw --> mapping["映射为平台标准状态"]
+    mapping --> conflict{"是否与人工确认状态冲突"}
+    conflict -->|"是"| review["标记待核对并通知负责人"]
+    review --> confirm["服务人员确认最终状态"]
+    conflict -->|"否"| confirm
+    confirm --> publish["发布给学生并记录审计日志"]
+    adapter -->|"失败"| manual["保留平台人工更新，不中断服务"]
+```
+
+## 7. 关键状态责任
 
 | 状态变化 | 发起角色 | 必填信息 |
 |---|---|---|
-| CONSULTED | 导师 | 咨询摘要、适配度、下一步 |
+| CONSULTED | 负责咨询的服务人员 | 咨询摘要、适配度、下一步 |
 | QUALIFIED | 导师/管理员 | 推荐服务、预算/时间匹配 |
 | PROPOSAL_SENT | 主导师/管理员 | 方案版本、价格、有效期 |
 | CONTRACT_SIGNED | 学生与公司 | 合同快照、签署证据 |
