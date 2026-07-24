@@ -1,4 +1,6 @@
-# Si Educational Free NextJs Landing Page Template
+# Geni EdTech theme demo
+
+Based on the Si Educational Free Next.js Landing Page Template.
 
 ## GenLynk theme demo
 

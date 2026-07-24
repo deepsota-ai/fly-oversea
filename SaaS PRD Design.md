@@ -3,7 +3,7 @@
 > 文档状态：Draft v1.0  
 > 产品范围：线上留学申请、学生签证、旅游签证、求职指导与语言指导咨询及交付
 > 目标读者：业务负责人、产品、设计、前后端、测试、运营  
-> 前端视觉基线：[Si Educational](si-education-1.0.0/README.md)，使用定制科技蓝主题
+> 前端视觉基线：[Geni EdTech（基于 Si Educational）](geni-edtech/README.md)，使用定制科技蓝主题
 > 配套文档：[业务流程](docs/business-flows.md) · [技术规格](docs/technical-spec.md) · [页面设计规范](docs/design-spec.md)
 > 可编辑设计：[Figma 页面 Mock](https://www.figma.com/design/4i3aFEZX5kfSf4Ty19kbFE) · [FigJam 业务流程](https://www.figma.com/board/1oi07jE1XXaDgxDqXJnHgS)
 

@@ -3,7 +3,7 @@
 ## 1. 推荐架构
 
 - Web：Next.js App Router + TypeScript；
-- 官网 UI：以仓库内 Si Educational（Next.js 15.2.4 + Tailwind CSS v4）作为视觉和营销组件基线；
+- 官网 UI：以仓库内 `geni-edtech/`（基于 Si Educational，Next.js 15.2.4 + Tailwind CSS v4）作为视觉和营销组件基线；
 - Portal UI：复用其设计 Token，并按业务需要引入 Radix/shadcn 交互组件；
 - API：Next.js Route Handlers；复杂异步任务后续拆 Worker；
 - 主数据库：Turso/libSQL；开发环境使用本地 SQLite；
