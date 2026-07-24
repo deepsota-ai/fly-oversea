@@ -2,9 +2,9 @@
 
 Based on the Si Educational Free Next.js Landing Page Template.
 
-## GenLynk theme demo
+## Geni Links theme demo
 
-This repository copy is used only as the visual demo baseline for GenLynk.
+This repository copy is used only as the visual demo baseline for Geni Links.
 The current demo keeps the original sample pages and data, while applying a
 technology-blue theme in `src/app/globals.css`.
 
@@ -14,8 +14,9 @@ technology-blue theme in `src/app/globals.css`.
 - Surface: `#EEF3FF`
 - Accent: `#38BDF8`
 - Framework: Next.js `15.2.4`, Tailwind CSS `4`
+- Production domain: `https://geni-links.com`
 
-No GenLynk booking, account, database, or service-delivery functionality has
+No Geni Links booking, account, database, or service-delivery functionality has
 been implemented in this template yet.
 
 #### Preview

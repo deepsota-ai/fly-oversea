@@ -16,6 +16,14 @@
 - 任务队列：Phase 1 可使用托管 Cron + 数据库 Outbox，Phase 3 引入队列；
 - 可观测性：结构化日志、错误追踪和产品事件。
 
+### 1.1 生产域名约定
+
+- 正式主站：`https://geni-links.com`；
+- `www.geni-links.com` 使用 308 重定向到主站，避免重复 SEO 内容；
+- 生产环境设置 `NEXT_PUBLIC_SITE_URL=https://geni-links.com`；
+- Auth.js/NextAuth 回调、腾讯会议回调、邮件链接和 canonical URL 均由主站 URL 派生，不在业务代码中硬编码；
+- 发信地址计划使用 `@geni-links.com`，但必须在 DNS/SPF/DKIM/DMARC 验证完成后启用。
+
 ## 2. 模块边界
 
 | 模块 | 职责 | 不负责 |
